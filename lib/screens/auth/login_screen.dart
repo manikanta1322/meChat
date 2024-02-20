@@ -1,4 +1,8 @@
+import 'dart:math';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:we_chat/screens/home_screen.dart';
 
 import '../../main.dart';
@@ -26,9 +30,36 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  _handleGoogleBtnClick() {
+    _signInWithGoogle().then((user) {
+      print('\nUser : ${user.user}');
+      print('\nUser Additinal Information : ${user.additionalUserInfo}');
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => HomeScreen()));
+    });
+  }
+
+  Future<UserCredential> _signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
+
+    // Create a new credential
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth?.accessToken,
+      idToken: googleAuth?.idToken,
+    );
+
+    // Once signed in, return the UserCredential
+    return await FirebaseAuth.instance.signInWithCredential(credential);
+  }
+
   @override
   Widget build(BuildContext context) {
-    mv = MediaQuery.of(context).size;
+    // mv = MediaQuery.of(context).size;
     return Scaffold(
       //app bar
       appBar: AppBar(
@@ -42,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
             top: mv.height * .15,
             right: _isAnimate ? mv.width * .25 : -mv.width * .5,
             width: mv.width * .5,
-            child: Image.asset('images/instagram.png'),
+            child: Image.asset('images/logo.png'),
           ),
           Positioned(
             bottom: mv.height * .15,
@@ -55,12 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   shape: StadiumBorder(),
                   elevation: 1),
               onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => HomeScreen(),
-                  ),
-                );
+                _handleGoogleBtnClick();
               },
               icon: Image.asset(
                 'images/google.png',
