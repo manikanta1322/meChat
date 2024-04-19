@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:we_chat/screens/auth/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:we_chat/screens/auth/splash_screen.dart';
 import 'firebase_options.dart';
@@ -30,7 +29,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'We Chat ',
+      title: 'Me Chat ',
       theme: ThemeData(
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,

@@ -33,10 +33,7 @@ class DefaultFirebaseOptions {
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -63,6 +60,19 @@ class DefaultFirebaseOptions {
     messagingSenderId: '31742760590',
     projectId: 'wechat-1f79b',
     storageBucket: 'wechat-1f79b.appspot.com',
+    androidClientId: '31742760590-444kl2d5rca8p758ruc92eeqbf345ref.apps.googleusercontent.com',
+    iosClientId: '31742760590-239f09t9ql5sq0k8ujv2fcop0fbut0e3.apps.googleusercontent.com',
     iosBundleId: 'com.example.weChat',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyDhoPjZ5duedbYZqIuU8msHkq0em4G0Ys4',
+    appId: '1:31742760590:web:77b067b54de24171d05bdf',
+    messagingSenderId: '31742760590',
+    projectId: 'wechat-1f79b',
+    authDomain: 'wechat-1f79b.firebaseapp.com',
+    storageBucket: 'wechat-1f79b.appspot.com',
+    measurementId: 'G-YJ5QRFEZPK',
+  );
+
 }
