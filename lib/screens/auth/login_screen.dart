@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:we_chat/api/api.dart';
 import 'package:we_chat/helpers/dialogs.dart';
 import 'package:we_chat/screens/home_screen.dart';
 
@@ -22,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // TODO: implement initState
     super.initState();
     Future.delayed(
-      Duration(milliseconds: 500),
+      const Duration(milliseconds: 500),
       () {
         setState(() {
           _isAnimate = true;
@@ -34,14 +35,22 @@ class _LoginScreenState extends State<LoginScreen> {
   _handleGoogleBtnClick() {
     //for showing progress bar
     Dialogs.showProgressBar(context);
-    _signInWithGoogle().then((user) {
+    _signInWithGoogle().then((user) async {
       //for hiding progress bar
       Navigator.pop(context);
       if (user != null) {
         print('\nUser : ${user.user}');
         print('\nUser Additinal Information : ${user.additionalUserInfo}');
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => HomeScreen()));
+
+        if ((await APIs.userExists())) {
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+        } else {
+          await APIs.createUser().then((value) {
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+          });
+        }
       }
     });
   }
@@ -96,8 +105,8 @@ class _LoginScreenState extends State<LoginScreen> {
             height: mv.height * .07,
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromARGB(255, 221, 254, 222),
-                  shape: StadiumBorder(),
+                  backgroundColor: const Color.fromARGB(255, 221, 254, 222),
+                  shape: const StadiumBorder(),
                   elevation: 1),
               onPressed: () {
                 _handleGoogleBtnClick();
