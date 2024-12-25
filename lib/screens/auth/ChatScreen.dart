@@ -1,6 +1,6 @@
-import 'dart:convert';
-
+import 'package:audioplayers/audioplayers.dart';  // Add this import
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:we_chat/api/api.dart';
 import 'package:we_chat/main.dart';
@@ -17,10 +17,38 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  // for storing all messages
   List<Messages> _list = [];
-
   final _textController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final AudioPlayer _audioPlayer = AudioPlayer();  // Audio player for sound
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> playNotificationSound() async {
+  final AudioPlayer audioPlayer = AudioPlayer();
+  print("pushpa readyyy");
+  // Use AssetSource to play the sound file
+  await audioPlayer.play(AssetSource('sounds/peeps.mp3')); // Path to sound file
+  print("pushpa readyyyyyy");
+}
+
+  Future<void> showLocalNotification() async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'chat_channel_id', 'Chat Notifications', importance: Importance.max, priority: Priority.high);
+    const NotificationDetails platformDetails = NotificationDetails(android: androidDetails);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'New Message',
+      'You have received a new message.',
+      platformDetails,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -37,38 +65,39 @@ class _ChatScreenState extends State<ChatScreen> {
                 stream: APIs.getAllMessages(widget.user),
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
-                    // if data is loading
                     case ConnectionState.waiting:
                     case ConnectionState.none:
                       return const SizedBox();
-
-                    // if some or all data is loaded then show it
-
                     case ConnectionState.active:
                     case ConnectionState.done:
                       final data = snapshot.data?.docs;
-
-                      _list = data
-                              ?.map((e) => Messages.fromJson(e.data()))
-                              .toList() ??
-                          [];
+                      _list = data?.map((e) => Messages.fromJson(e.data())).toList() ?? [];
 
                       if (_list.isNotEmpty) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+                        });
+
                         return ListView.builder(
-                            // itemCount: 45,
-                            itemCount: _list.length,
-                            physics: const BouncingScrollPhysics(),
-                            padding: EdgeInsets.only(top: mv.height * .01),
-                            itemBuilder: (context, index) {
-                              return MessageCard(messages: _list[index]);
-                              // return Text('Name: ${list[index]}');
-                            });
+                          controller: _scrollController,
+                          itemCount: _list.length,
+                          physics: const BouncingScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            if (index == _list.length - 1) {
+                              // When a new message arrives
+                              playNotificationSound();
+                              showLocalNotification();
+                            }
+                            return MessageCard(messages: _list[index]);
+                          },
+                        );
                       } else {
                         return const Center(
-                            child: Text(
-                          "No Chats Found",
-                          style: TextStyle(fontSize: 20),
-                        ));
+                          child: Text(
+                            "No Chats Found",
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        );
                       }
                   }
                 },
@@ -99,7 +128,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 height: mv.height * .05,
                 imageUrl: widget.user.image.toString(),
                 errorWidget: (context, url, error) => const CircleAvatar(
-                    backgroundImage: AssetImage('images/man.png'))),
+                    backgroundImage: AssetImage('asstes/images/man.png'))),
           ),
           const SizedBox(
             width: 10,
@@ -135,11 +164,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _chatInput() {
     return Padding(
-      padding: EdgeInsets.symmetric(
-          vertical: mv.height * .01, horizontal: mv.height * .03),
+      padding: EdgeInsets.symmetric(vertical: mv.height * .01, horizontal: mv.height * .03),
       child: Row(
         children: [
-          // input field and button
           Expanded(
             child: Card(
               shape: RoundedRectangleBorder(
@@ -147,7 +174,6 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               child: Row(
                 children: [
-                  // emoji button
                   IconButton(
                       onPressed: () {},
                       icon: const Icon(
@@ -155,20 +181,17 @@ class _ChatScreenState extends State<ChatScreen> {
                         color: Colors.blueAccent,
                         size: 26,
                       )),
-
                   Expanded(
-                      child: TextField(
-                    controller: _textController,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: null,
-                    decoration: const InputDecoration(
-                        hintText: 'Type Something....',
-                        hintStyle: TextStyle(
-                          color: Colors.blueAccent,
-                        ),
-                        border: InputBorder.none),
-                  )),
-                  // pick image from gallery
+                    child: TextField(
+                      controller: _textController,
+                      keyboardType: TextInputType.multiline,
+                      maxLines: 1,
+                      decoration: const InputDecoration(
+                          hintText: 'Type Something....',
+                          hintStyle: TextStyle(color: Colors.blueAccent),
+                          border: InputBorder.none),
+                    ),
+                  ),
                   IconButton(
                       onPressed: () {},
                       icon: const Icon(
@@ -176,7 +199,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         color: Colors.blueAccent,
                         size: 26,
                       )),
-                  // take image from camera button
                   IconButton(
                       onPressed: () {},
                       icon: const Icon(
@@ -191,19 +213,20 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           ),
-
-          // send message button
-
           MaterialButton(
             onPressed: () {
               if (_textController.text.isNotEmpty) {
                 APIs.sendMessage(widget.user, _textController.text);
                 _textController.text = '';
+
+                playNotificationSound();  // Play sound when sending
+                showLocalNotification();  // Show notification when sending
+                
+                _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
               }
             },
             minWidth: 0,
-            padding:
-                const EdgeInsets.only(top: 10, bottom: 10, right: 5, left: 10),
+            padding: const EdgeInsets.only(top: 10, bottom: 10, right: 5, left: 10),
             shape: const CircleBorder(),
             color: Colors.green,
             child: const Icon(

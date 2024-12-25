@@ -3,22 +3,48 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:we_chat/screens/auth/splash_screen.dart';
 import 'firebase_options.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:audioplayers/audioplayers.dart';
 
-//global object for accessing device screen size
+// Global object for accessing device screen size
 late Size mv;
+
+// Global object for notifications
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  //enter full screen
+  // Enter full screen
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-//for setting orientation for portrait only
+  // Set orientation to portrait only
   SystemChrome.setPreferredOrientations(
           [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown])
       .then((value) {
     _initializeFirebase();
+    _initializeNotifications(); // Initialize notifications
     runApp(const MyApp());
   });
+}
+
+// Initialize Firebase
+Future<void> _initializeFirebase() async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+}
+
+// Initialize Notifications
+Future<void> _initializeNotifications() async {
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('app_icon'); // Replace with your app icon
+
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 }
 
 class MyApp extends StatelessWidget {
@@ -29,7 +55,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Me Chat ',
+      title: 'Me Chat',
       theme: ThemeData(
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
@@ -43,13 +69,16 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: SplashScreen(),
+      home: const SplashScreen(),
     );
   }
 }
 
-_initializeFirebase() async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+// Function to play notification sound
+Future<void> playNotificationSound() async {
+  final AudioPlayer audioPlayer = AudioPlayer();
+print("pushpa ready");
+  // Use AssetSource to play the sound file
+  await audioPlayer.play(
+      AssetSource('sounds/notification.mp3')); // Path to sound file
 }

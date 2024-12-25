@@ -1,6 +1,9 @@
+// ignore_for_file: file_names, use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
@@ -102,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   errorWidget: (context, url, error) =>
                                       const CircleAvatar(
                                           backgroundImage:
-                                              AssetImage('images/man.png'))),
+                                              AssetImage('assets/images/man.png'))),
                             ),
                       Positioned(
                         bottom: 0,
@@ -141,7 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12)),
                       hintText: 'Enter your name',
-                      label: Text('Name'),
+                      label: const Text('Name'),
                     ),
                   ),
                   SizedBox(height: mv.height * .02),
@@ -158,20 +161,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12)),
                       hintText: 'Enter about',
-                      label: Text('About'),
+                      label: const Text('About'),
                     ),
                   ),
                   SizedBox(height: mv.height * .05),
                   ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        shape: StadiumBorder(),
+                        shape: const StadiumBorder(),
                         minimumSize: Size(mv.width * .5, mv.height * .06),
                       ),
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           _formKey.currentState!.save();
                           APIs.updateUserInfo();
-                          print('inside validator');
+                          if (kDebugMode) {
+                            print('inside validator');
+                          }
                           Dialogs.showSnackbar(
                               context, 'Profile Updated Successfully');
                         }
@@ -227,8 +232,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         final XFile? image =
                             await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
                         if (image != null) {
-                          print(
+                          if (kDebugMode) {
+                            print(
                               'Image Path: ${image.path} -- MimeType: ${image.mimeType}');
+                          }
                           setState(() {
                             _image = image.path;
                           });
@@ -237,7 +244,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Navigator.pop(context);
                         }
                       },
-                      child: Image.asset('images/gallery.png')),
+                      child: Image.asset('assets/images/gallery.png')),
                   ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
@@ -250,7 +257,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         final XFile? image =
                             await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
                         if (image != null) {
-                          print('Image Path: ${image.path}');
+                          if (kDebugMode) {
+                            print('Image Path: ${image.path}');
+                          }
                           setState(() {
                             _image = image.path;
                           });
@@ -258,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Navigator.pop(context);
                         }
                       },
-                      child: Image.asset('images/camera.png')),
+                      child: Image.asset('assets/images/camera.png')),
                 ],
               )
             ],

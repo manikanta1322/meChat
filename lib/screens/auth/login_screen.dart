@@ -1,6 +1,9 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:we_chat/api/api.dart';
@@ -39,8 +42,12 @@ class _LoginScreenState extends State<LoginScreen> {
       //for hiding progress bar
       Navigator.pop(context);
       if (user != null) {
-        print('\nUser : ${user.user}');
-        print('\nUser Additinal Information : ${user.additionalUserInfo}');
+        if (kDebugMode) {
+          print('\nUser : ${user.user}');
+        }
+        if (kDebugMode) {
+          print('\nUser Additinal Information : ${user.additionalUserInfo}');
+        }
 
         if ((await APIs.userExists())) {
           Navigator.pushReplacement(
@@ -74,8 +81,10 @@ class _LoginScreenState extends State<LoginScreen> {
       // Once signed in, return the UserCredential
       return await FirebaseAuth.instance.signInWithCredential(credential);
     } catch (e) {
-      print('\n_signInWithGoogle : $e');
-      Dialogs.showSnackbar(context, 'Something went wrong check Internet');
+      if (kDebugMode) {
+        print('\n_signInWithGoogle : $e');
+      }
+      Dialogs.showSnackbar(context, 'Something went wrong: $e');
       return null;
     }
   }
@@ -96,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
             top: mv.height * .15,
             right: _isAnimate ? mv.width * .25 : -mv.width * .5,
             width: mv.width * .5,
-            child: Image.asset('images/logo.png'),
+            child: Image.asset('assets/images/logo.png'),
           ),
           Positioned(
             bottom: mv.height * .15,
@@ -112,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _handleGoogleBtnClick();
               },
               icon: Image.asset(
-                'images/google.png',
+                'assets/images/google.png',
                 height: mv.height * .03,
               ),
               label: RichText(

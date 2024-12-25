@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:we_chat/api/api.dart';
@@ -20,14 +21,16 @@ class _SplashScreenState extends State<SplashScreen> {
     // TODO: implement initState
     super.initState();
     Future.delayed(
-      Duration(milliseconds: 2000),
+      const Duration(milliseconds: 2000),
       () {
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
         SystemChrome.setSystemUIOverlayStyle(
           const  SystemUiOverlayStyle(systemNavigationBarColor: Colors.white,statusBarColor: Colors.white));
       
       if(APIs.auth.currentUser != null){
-          print('\nUser : ${APIs.auth.currentUser}');
+          if (kDebugMode) {
+            print('\nUser : ${APIs.auth.currentUser}');
+          }
            Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) {
@@ -59,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen> {
             // right: _isAnimate ? mv.width * .25 : -mv.width * .5,
             right: mv.width * .25,
             width: mv.width * .5,
-            child: Image.asset('images/logo.png'),
+            child: Image.asset('assets/images/logo.png'),
           ),
           Positioned(
               bottom: mv.height * .15,

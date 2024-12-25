@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:we_chat/models/chatUser.dart';
 import 'package:we_chat/models/messages.dart';
 
@@ -32,7 +33,9 @@ class APIs {
     await firestore.collection('users').doc(user.uid).get().then((user) async {
       if (user.exists) {
         me = ChatUesr.fromJson(user.data()!);
-        print('My Data : ${user.data()}');
+        if (kDebugMode) {
+          print('My Data : ${user.data()}');
+        }
       } else {
         await createUser().then((value) => getSelfInfo());
       }
@@ -78,7 +81,9 @@ class APIs {
   // for updating profile picture
   static Future<void> updateProfilePicture(File file) async {
     final ext = file.path.split('.').last;
-    print('Extension: $ext');
+    if (kDebugMode) {
+      print('Extension: $ext');
+    }
 
     // storage file ref with path
     final ref = storage.ref().child('profilepicture/${user.uid}.$ext');
@@ -87,7 +92,9 @@ class APIs {
     await ref
         .putFile(file, SettableMetadata(contentType: 'image/$ext'))
         .then((p0) {
-      print('Data Transferred : ${p0.bytesTransferred / 1000}');
+      if (kDebugMode) {
+        print('Data Transferred : ${p0.bytesTransferred / 1000}');
+      }
     });
 
     // updating image to the firebase database

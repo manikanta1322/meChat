@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_launcher_icons/xml_templates.dart';
 import 'package:we_chat/main.dart';
 import 'package:we_chat/models/chatUser.dart';
 import 'package:we_chat/screens/auth/ChatScreen.dart';
@@ -34,7 +33,7 @@ class _ChatUserCardState extends State<ChatUserCard> {
                   height: mv.height * .055,
                   imageUrl: widget.user.image.toString(),
                   errorWidget: (context, url, error) => const CircleAvatar(
-                      backgroundImage: AssetImage('images/man.png'))),
+                      backgroundImage: AssetImage('assets/images/man.png'))),
             ),
             title: Text(widget.user.name.toString()),
             subtitle: Text(
