@@ -1,5 +1,6 @@
 // ignore_for_file: file_names
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:we_chat/api/api.dart';
 import 'package:we_chat/helpers/myDateUtil.dart';
@@ -34,7 +35,9 @@ class _MessageCardState extends State<MessageCard> {
       children: [
         Flexible(
           child: Container(
-            padding: EdgeInsets.all(mv.width * .04),
+            padding: EdgeInsets.all(widget.messages.type == Type.image
+                ? mv.width * .03
+                : mv.width * .04),
             margin: EdgeInsets.symmetric(
                 vertical: mv.height * .01, horizontal: mv.width * .04),
             decoration: BoxDecoration(
@@ -45,13 +48,27 @@ class _MessageCardState extends State<MessageCard> {
                   topRight: Radius.circular(30),
                   bottomRight: Radius.circular(30),
                 )),
-            child: Text(
-              widget.messages.msg,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-              ),
-            ),
+            child: widget.messages.type == Type.text
+                ? Text(
+                    widget.messages.msg,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(mv.height * .03),
+                    child: CachedNetworkImage(
+                      // width: mv.width * .05,
+                      // height: mv.height * .05,
+                      imageUrl: widget.messages.msg,
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(),
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.image,
+                        size: 70,
+                      ),
+                    )),
           ),
         ),
         Padding(
@@ -94,7 +111,9 @@ class _MessageCardState extends State<MessageCard> {
         ),
         Flexible(
           child: Container(
-            padding: EdgeInsets.all(mv.width * .04),
+            padding: EdgeInsets.all(widget.messages.type == Type.image
+                ? mv.width * .03
+                : mv.width * .04),
             margin: EdgeInsets.symmetric(
                 vertical: mv.height * .01, horizontal: mv.width * .04),
             decoration: BoxDecoration(
@@ -105,13 +124,27 @@ class _MessageCardState extends State<MessageCard> {
                   topRight: Radius.circular(30),
                   bottomLeft: Radius.circular(30),
                 )),
-            child: Text(
-              widget.messages.msg,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-              ),
-            ),
+            child: widget.messages.type == Type.text
+                ? Text(
+                    widget.messages.msg,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(mv.height * .03),
+                    child: CachedNetworkImage(
+                      // width: mv.width * .05,
+                      // height: mv.height * .05,
+                      imageUrl: widget.messages.msg,
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(),
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.image,
+                        size: 70,
+                      ),
+                    )),
           ),
         ),
       ],

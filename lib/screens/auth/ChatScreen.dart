@@ -1,7 +1,12 @@
-import 'package:audioplayers/audioplayers.dart';  // Add this import
+import 'dart:io';
+
+import 'package:audioplayers/audioplayers.dart'; // Add this import
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:we_chat/api/api.dart';
 import 'package:we_chat/main.dart';
 import 'package:we_chat/models/chatUser.dart';
@@ -20,7 +25,7 @@ class _ChatScreenState extends State<ChatScreen> {
   List<Messages> _list = [];
   final _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final AudioPlayer _audioPlayer = AudioPlayer();  // Audio player for sound
+  final AudioPlayer _audioPlayer = AudioPlayer(); // Audio player for sound
 
   @override
   void dispose() {
@@ -29,17 +34,20 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> playNotificationSound() async {
-  final AudioPlayer audioPlayer = AudioPlayer();
-  print("pushpa readyyy");
-  // Use AssetSource to play the sound file
-  await audioPlayer.play(AssetSource('sounds/peeps.mp3')); // Path to sound file
-  print("pushpa readyyyyyy");
-}
+    final AudioPlayer audioPlayer = AudioPlayer();
+    print("pushpa readyyy");
+    // Use AssetSource to play the sound file
+    await audioPlayer
+        .play(AssetSource('sounds/peeps.mp3')); // Path to sound file
+    print("pushpa readyyyyyy");
+  }
 
   Future<void> showLocalNotification() async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'chat_channel_id', 'Chat Notifications', importance: Importance.max, priority: Priority.high);
-    const NotificationDetails platformDetails = NotificationDetails(android: androidDetails);
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails('chat_channel_id', 'Chat Notifications',
+            importance: Importance.max, priority: Priority.high);
+    const NotificationDetails platformDetails =
+        NotificationDetails(android: androidDetails);
 
     await flutterLocalNotificationsPlugin.show(
       0,
@@ -49,62 +57,97 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  bool _showEmoji = false;
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          flexibleSpace: _appbar(),
-        ),
-        backgroundColor: const Color.fromARGB(255, 220, 235, 247),
-        body: Column(
-          children: [
-            Expanded(
-              child: StreamBuilder(
-                stream: APIs.getAllMessages(widget.user),
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.waiting:
-                    case ConnectionState.none:
-                      return const SizedBox();
-                    case ConnectionState.active:
-                    case ConnectionState.done:
-                      final data = snapshot.data?.docs;
-                      _list = data?.map((e) => Messages.fromJson(e.data())).toList() ?? [];
-
-                      if (_list.isNotEmpty) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-                        });
-
-                        return ListView.builder(
-                          controller: _scrollController,
-                          itemCount: _list.length,
-                          physics: const BouncingScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            if (index == _list.length - 1) {
-                              // When a new message arrives
-                              playNotificationSound();
-                              showLocalNotification();
-                            }
-                            return MessageCard(messages: _list[index]);
-                          },
-                        );
-                      } else {
-                        return const Center(
-                          child: Text(
-                            "No Chats Found",
-                            style: TextStyle(fontSize: 20),
-                          ),
-                        );
-                      }
-                  }
-                },
-              ),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SafeArea(
+        child: WillPopScope(
+           onWillPop: () {
+          if (_showEmoji) {
+            setState(() {
+              _showEmoji = !_showEmoji;
+            });
+            return Future.value(false);
+          } else {
+            return Future.value(true);
+          }
+        },
+          child: Scaffold(
+            appBar: AppBar(
+              automaticallyImplyLeading: false,
+              flexibleSpace: _appbar(),
             ),
-            _chatInput(),
-          ],
+            backgroundColor: const Color.fromARGB(255, 220, 235, 247),
+            body: Column(
+              children: [
+                Expanded(
+                  child: StreamBuilder(
+                    stream: APIs.getAllMessages(widget.user),
+                    builder: (context, snapshot) {
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.waiting:
+                        case ConnectionState.none:
+                          return const SizedBox();
+                        case ConnectionState.active:
+                        case ConnectionState.done:
+                          final data = snapshot.data?.docs;
+                          _list = data
+                                  ?.map((e) => Messages.fromJson(e.data()))
+                                  .toList() ??
+                              [];
+                
+                          if (_list.isNotEmpty) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _scrollController.jumpTo(
+                                  _scrollController.position.maxScrollExtent);
+                            });
+                
+                            return ListView.builder(
+                              controller: _scrollController,
+                              itemCount: _list.length,
+                              physics: const BouncingScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                if (index == _list.length - 1) {
+                                  // When a new message arrives
+                                  playNotificationSound();
+                                  showLocalNotification();
+                                }
+                                return MessageCard(messages: _list[index]);
+                              },
+                            );
+                          } else {
+                            return const Center(
+                              child: Text(
+                                "No Chats Found",
+                                style: TextStyle(fontSize: 20),
+                              ),
+                            );
+                          }
+                      }
+                    },
+                  ),
+                ),
+                _chatInput(),
+                if (_showEmoji)
+                  SizedBox(
+                    height: mv.height * .35,
+                    child: EmojiPicker(
+                      textEditingController: _textController,
+                      config: Config(
+                        checkPlatformCompatibility: true,
+                        emojiViewConfig: EmojiViewConfig(
+                          columns: 8,
+                          emojiSizeMax: 28 * (Platform.isIOS ? 1.20 : 1.0),
+                        ),
+                      ),
+                    ),
+                  )
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -164,7 +207,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _chatInput() {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: mv.height * .01, horizontal: mv.height * .03),
+      padding: EdgeInsets.symmetric(
+          vertical: mv.height * .01, horizontal: mv.height * .03),
       child: Row(
         children: [
           Expanded(
@@ -175,7 +219,12 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Row(
                 children: [
                   IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        FocusScope.of(context).unfocus();
+                        setState(
+                          () => _showEmoji = !_showEmoji,
+                        );
+                      },
                       icon: const Icon(
                         Icons.emoji_emotions,
                         color: Colors.blueAccent,
@@ -186,6 +235,12 @@ class _ChatScreenState extends State<ChatScreen> {
                       controller: _textController,
                       keyboardType: TextInputType.multiline,
                       maxLines: 1,
+                      onTap: () {
+                        if (_showEmoji)
+                          setState(
+                            () => _showEmoji = !_showEmoji,
+                          );
+                      },
                       decoration: const InputDecoration(
                           hintText: 'Type Something....',
                           hintStyle: TextStyle(color: Colors.blueAccent),
@@ -200,7 +255,20 @@ class _ChatScreenState extends State<ChatScreen> {
                         size: 26,
                       )),
                   IconButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                              final ImagePicker picker = ImagePicker();
+                        // click for image.
+                        final XFile? image =
+                            await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+                        if (image != null) {
+                          if (kDebugMode) {
+                            print('Image Path: ${image.path}');
+                          }
+                        
+                         await  APIs.sendChatImage(widget.user, File(image.path));
+                         
+                        }
+                      },
                       icon: const Icon(
                         Icons.camera_alt_rounded,
                         color: Colors.blueAccent,
@@ -216,17 +284,19 @@ class _ChatScreenState extends State<ChatScreen> {
           MaterialButton(
             onPressed: () {
               if (_textController.text.isNotEmpty) {
-                APIs.sendMessage(widget.user, _textController.text);
+                APIs.sendMessage(widget.user, _textController.text, Type.text);
                 _textController.text = '';
 
-                playNotificationSound();  // Play sound when sending
-                showLocalNotification();  // Show notification when sending
-                
-                _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+                playNotificationSound(); // Play sound when sending
+                showLocalNotification(); // Show notification when sending
+
+                _scrollController
+                    .jumpTo(_scrollController.position.maxScrollExtent);
               }
             },
             minWidth: 0,
-            padding: const EdgeInsets.only(top: 10, bottom: 10, right: 5, left: 10),
+            padding:
+                const EdgeInsets.only(top: 10, bottom: 10, right: 5, left: 10),
             shape: const CircleBorder(),
             color: Colors.green,
             child: const Icon(
