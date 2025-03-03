@@ -39,7 +39,8 @@ Future<void> _initializeFirebase() async {
 // Initialize Notifications
 Future<void> _initializeNotifications() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('app_icon'); // Replace with your app icon
+    AndroidInitializationSettings('assets/images/logo.png');
+
 
   const InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);

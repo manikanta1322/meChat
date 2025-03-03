@@ -1,48 +1,40 @@
 {
   "project_info": {
-    "project_number": "31742760590",
-    "project_id": "wechat-1f79b",
-    "storage_bucket": "wechat-1f79b.appspot.com"
+    "project_number": "173784210273",
+    "project_id": "mechat-2e424",
+    "storage_bucket": "mechat-2e424.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:31742760590:android:aa0c2a1489d31428d05bdf",
+        "mobilesdk_app_id": "1:173784210273:android:e19bc39de5c32d8b340320",
         "android_client_info": {
-          "package_name": "com.example.we_chat"
+          "package_name": "com.mechat.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "31742760590-444kl2d5rca8p758ruc92eeqbf345ref.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.we_chat",
-            "certificate_hash": "20d92e72601455de0881cd8bf6860df391db6509"
-          }
-        },
-        {
-          "client_id": "31742760590-plssno2qqcbgctjnccur0vd9daitdr4d.apps.googleusercontent.com",
+          "client_id": "173784210273-cc87gf1uqvd4cpnov05ubqg6pluetvog.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCeCRdHXlR1bKJnHwr0LyjHZL_I2m4T8Fg"
+          "current_key": "AIzaSyCAPBsls_mj-PfZzMep2lmWY7Y3-7DzsIU"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "31742760590-plssno2qqcbgctjnccur0vd9daitdr4d.apps.googleusercontent.com",
+              "client_id": "173784210273-cc87gf1uqvd4cpnov05ubqg6pluetvog.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "31742760590-239f09t9ql5sq0k8ujv2fcop0fbut0e3.apps.googleusercontent.com",
+              "client_id": "173784210273-hjg1m9n7p3eejhae7m4dk03u3eumiedb.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.weChat"
+                "bundle_id": "com.mechat.app"
               }
             }
           ]

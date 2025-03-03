@@ -35,7 +35,7 @@ apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
-    namespace 'com.example.we_chat'
+    namespace 'com.mechat.app'
     compileSdkVersion 35    
     ndkVersion flutter.ndkVersion
 
@@ -53,7 +53,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.we_chat" // Ensure this matches the namespace
+        applicationId "com.mechat.app" // Ensure this matches the namespace
         minSdkVersion 23
         targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
