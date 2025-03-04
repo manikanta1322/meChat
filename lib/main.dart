@@ -75,11 +75,11 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Function to play notification sound
-Future<void> playNotificationSound() async {
-  final AudioPlayer audioPlayer = AudioPlayer();
-print("pushpa ready");
-  // Use AssetSource to play the sound file
-  await audioPlayer.play(
-      AssetSource('sounds/notification.mp3')); // Path to sound file
-}
+// // Function to play notification sound
+// Future<void> playNotificationSound() async {
+//   final AudioPlayer audioPlayer = AudioPlayer();
+// print("pushpa ready");
+//   // Use AssetSource to play the sound file
+//   await audioPlayer.play(
+//       AssetSource('sounds/notification.mp3')); // Path to sound file
+// }

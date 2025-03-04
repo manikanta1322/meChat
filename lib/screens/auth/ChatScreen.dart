@@ -26,6 +26,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final AudioPlayer _audioPlayer = AudioPlayer(); // Audio player for sound
+  int? _lastMessageCount;
 
   @override
   void dispose() {
@@ -65,16 +66,16 @@ class _ChatScreenState extends State<ChatScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: SafeArea(
         child: WillPopScope(
-           onWillPop: () {
-          if (_showEmoji) {
-            setState(() {
-              _showEmoji = !_showEmoji;
-            });
-            return Future.value(false);
-          } else {
-            return Future.value(true);
-          }
-        },
+          onWillPop: () {
+            if (_showEmoji) {
+              setState(() {
+                _showEmoji = !_showEmoji;
+              });
+              return Future.value(false);
+            } else {
+              return Future.value(true);
+            }
+          },
           child: Scaffold(
             appBar: AppBar(
               automaticallyImplyLeading: false,
@@ -94,27 +95,40 @@ class _ChatScreenState extends State<ChatScreen> {
                         case ConnectionState.active:
                         case ConnectionState.done:
                           final data = snapshot.data?.docs;
+
+                          // Convert to message objects
                           _list = data
                                   ?.map((e) => Messages.fromJson(e.data()))
                                   .toList() ??
                               [];
-                
+
+                          // Sort messages by timestamp (oldest first)
+                          _list.sort((a, b) => a.sent.compareTo(b.sent));
+
+                          // Avoid playing sound when first opening the chat
+                          if (_lastMessageCount != null &&
+                              _list.length > _lastMessageCount!) {
+                            playNotificationSound();
+                            showLocalNotification();
+                          }
+
+                          // Initialize _lastMessageCount only after first data load
+                          _lastMessageCount ??= _list.length;
+
                           if (_list.isNotEmpty) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
-                              _scrollController.jumpTo(
-                                  _scrollController.position.maxScrollExtent);
+                              if (_scrollController.hasClients) {
+                                _scrollController.jumpTo(
+                                    _scrollController.position.maxScrollExtent);
+                              }
                             });
-                
+
                             return ListView.builder(
                               controller: _scrollController,
                               itemCount: _list.length,
+                              shrinkWrap: true,
                               physics: const BouncingScrollPhysics(),
                               itemBuilder: (context, index) {
-                                if (index == _list.length - 1) {
-                                  // When a new message arrives
-                                  playNotificationSound();
-                                  showLocalNotification();
-                                }
                                 return MessageCard(messages: _list[index]);
                               },
                             );
@@ -256,17 +270,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       )),
                   IconButton(
                       onPressed: () async {
-                              final ImagePicker picker = ImagePicker();
+                        final ImagePicker picker = ImagePicker();
                         // click for image.
-                        final XFile? image =
-                            await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
+                        final XFile? image = await picker.pickImage(
+                            source: ImageSource.camera, imageQuality: 70);
                         if (image != null) {
                           if (kDebugMode) {
                             print('Image Path: ${image.path}');
                           }
-                        
-                         await  APIs.sendChatImage(widget.user, File(image.path));
-                         
+
+                          await APIs.sendChatImage(
+                              widget.user, File(image.path));
                         }
                       },
                       icon: const Icon(

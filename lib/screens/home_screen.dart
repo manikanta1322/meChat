@@ -136,6 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_list.isNotEmpty) {
                     return ListView.builder(
                         // itemCount: 45,
+                        shrinkWrap: true,
                         itemCount:
                             _isSearching ? _searchList.length : _list.length,
                         physics: const BouncingScrollPhysics(),
