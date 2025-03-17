@@ -60,24 +60,19 @@ class _ChatUserCardState extends State<ChatUserCard> {
               ),
               trailing: _message == null
                   ? null
-                  :
-                  
-                  _message!.fromId == APIs.user.uid
-                      && _message!.read.isEmpty
-                          ? 
-                   Text(
-                      'Online',
-                      style: TextStyle(
-                          color: Colors.greenAccent.shade700,
-                          fontWeight: FontWeight.w700),
-                    ):Text(
-                _message!.sent.toString(),
-                style: const TextStyle(
-                  color: Colors.black54,
-                ),
-              )
-
-             
+                  : _message!.fromId == APIs.user.uid && _message!.read.isEmpty
+                      ? Text(
+                          'Online',
+                          style: TextStyle(
+                              color: Colors.greenAccent.shade700,
+                              fontWeight: FontWeight.w700),
+                        )
+                      : Text(
+                          _message!.sent.toString(),
+                          style: const TextStyle(
+                            color: Colors.black54,
+                          ),
+                        ),
             );
           },
         ),

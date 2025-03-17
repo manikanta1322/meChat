@@ -2,10 +2,12 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:we_chat/api/api.dart';
 import 'package:we_chat/helpers/myDateUtil.dart';
-import 'package:we_chat/main.dart';
 import 'package:we_chat/models/messages.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class MessageCard extends StatefulWidget {
   final Messages messages;
@@ -23,85 +25,95 @@ class _MessageCardState extends State<MessageCard> {
         : _blueMessage();
   }
 
-  // sender or another user message
+  // Function to show dialog when image is tapped
+  void _showImageOptions(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Image Options'),
+        content: const Text('Do you want to download this image?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Download'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Sender's message
   Widget _blueMessage() {
-    // update last read message if sender and receiver are different
     if (widget.messages.read.isEmpty) {
       APIs.updateMessageReadStatus(widget.messages);
-      print('message read upload');
     }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Flexible(
           child: Container(
-            padding: EdgeInsets.all(widget.messages.type == Type.image
-                ? mv.width * .03
-                : mv.width * .04),
-            margin: EdgeInsets.symmetric(
-                vertical: mv.height * .01, horizontal: mv.width * .04),
+            padding:
+                EdgeInsets.all(widget.messages.type == Type.image ? 12 : 16),
+            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
             decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 203, 225, 243),
-                border: Border.all(color: Colors.lightBlue),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                )),
+              color: const Color.fromARGB(255, 203, 225, 243),
+              border: Border.all(color: Colors.lightBlue),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+            ),
             child: widget.messages.type == Type.text
                 ? Text(
                     widget.messages.msg,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.black87,
-                    ),
+                    style: const TextStyle(fontSize: 15, color: Colors.black87),
                   )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(mv.height * .03),
-                    child: CachedNetworkImage(
-                      // width: mv.width * .05,
-                      // height: mv.height * .05,
-                      imageUrl: widget.messages.msg,
-                      placeholder: (context, url) =>
-                          const CircularProgressIndicator(),
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.image,
-                        size: 70,
+                : GestureDetector(
+                    onTap: () => _showImageOptions(widget.messages.msg),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: CachedNetworkImage(
+                        imageUrl: widget.messages.msg,
+                        placeholder: (context, url) =>
+                            const CircularProgressIndicator(),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.broken_image, size: 50),
                       ),
-                    )),
+                    ),
+                  ),
           ),
         ),
         Padding(
-          padding: EdgeInsets.only(right: mv.width * .04),
+          padding: const EdgeInsets.only(right: 16),
           child: Text(
             MyDateUtil.getformattedTime(
                 context: context, time: widget.messages.sent),
             style: const TextStyle(fontSize: 13, color: Colors.black54),
           ),
-        )
+        ),
       ],
     );
   }
 
-  // our or user message
+  // Receiver's message
   Widget _greenMessage() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            SizedBox(
-              width: mv.width * .04,
-            ),
+            const SizedBox(width: 16),
             if (widget.messages.read.isNotEmpty)
-              const Icon(
-                Icons.done_all_rounded,
-                color: Colors.blue,
-                size: 20,
-              ),
-            const SizedBox(
-              width: 2,
-            ),
+              const Icon(Icons.done_all_rounded, color: Colors.blue, size: 20),
+            const SizedBox(width: 2),
             Text(
               MyDateUtil.getformattedTime(
                   context: context, time: widget.messages.sent),
@@ -111,40 +123,36 @@ class _MessageCardState extends State<MessageCard> {
         ),
         Flexible(
           child: Container(
-            padding: EdgeInsets.all(widget.messages.type == Type.image
-                ? mv.width * .03
-                : mv.width * .04),
-            margin: EdgeInsets.symmetric(
-                vertical: mv.height * .01, horizontal: mv.width * .04),
+            padding:
+                EdgeInsets.all(widget.messages.type == Type.image ? 12 : 16),
+            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
             decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 208, 243, 203),
-                border: Border.all(color: Colors.lightGreen),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                  bottomLeft: Radius.circular(30),
-                )),
+              color: const Color.fromARGB(255, 208, 243, 203),
+              border: Border.all(color: Colors.lightGreen),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(30),
+                topRight: Radius.circular(30),
+                bottomLeft: Radius.circular(30),
+              ),
+            ),
             child: widget.messages.type == Type.text
                 ? Text(
                     widget.messages.msg,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.black87,
-                    ),
+                    style: const TextStyle(fontSize: 15, color: Colors.black87),
                   )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(mv.height * .03),
-                    child: CachedNetworkImage(
-                      // width: mv.width * .05,
-                      // height: mv.height * .05,
-                      imageUrl: widget.messages.msg,
-                      placeholder: (context, url) =>
-                          const CircularProgressIndicator(),
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.image,
-                        size: 70,
+                : GestureDetector(
+                    onTap: () => _showImageOptions(widget.messages.msg),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: CachedNetworkImage(
+                        imageUrl: widget.messages.msg,
+                        placeholder: (context, url) =>
+                            const CircularProgressIndicator(),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.broken_image, size: 50),
                       ),
-                    )),
+                    ),
+                  ),
           ),
         ),
       ],

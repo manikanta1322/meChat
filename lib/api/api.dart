@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:we_chat/models/chatUser.dart';
@@ -121,7 +122,8 @@ class APIs {
   }
 
   // for sending messages
-  static Future<void> sendMessage(ChatUesr chatUser, String msg, Type type) async {
+  static Future<void> sendMessage(
+      ChatUesr chatUser, String msg, Type type) async {
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 // message to send
     final Messages message = Messages(
@@ -144,7 +146,8 @@ class APIs {
         .update({'read': DateTime.now().millisecondsSinceEpoch.toString()});
   }
 
-  static Stream<QuerySnapshot<Map<String, dynamic>>> getLastMessages(ChatUesr user) {
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getLastMessages(
+      ChatUesr user) {
     return firestore
         .collection('chats/${getConversationId(user.id.toString())}/messages/')
         .orderBy('sent', descending: true)
@@ -153,11 +156,11 @@ class APIs {
   }
 
   static Future<void> sendChatImage(ChatUesr chatUser, File file) async {
-   final ext = file.path.split('.').last;
-  
+    final ext = file.path.split('.').last;
 
     // storage file ref with path
-    final ref = storage.ref().child('images/${getConversationId(chatUser.id.toString())}/${DateTime.now().millisecondsSinceEpoch}.$ext');
+    final ref = storage.ref().child(
+        'images/${getConversationId(chatUser.id.toString())}/${DateTime.now().millisecondsSinceEpoch}.$ext');
 
     // uploading image
     await ref
@@ -169,7 +172,118 @@ class APIs {
     });
 
     // updating image to the firebase database
-   final imageUrl = await ref.getDownloadURL();
+    final imageUrl = await ref.getDownloadURL();
     await sendMessage(chatUser, imageUrl, Type.image);
+  }
+
+  static Future<void> sendFriendRequest(String receiverId) async {
+    final String senderId = auth.currentUser!.uid; // Current user ID
+
+    await firestore.collection('friend_requests').doc(receiverId).set({
+      'requests': FieldValue.arrayUnion(
+          [senderId]) // Add sender ID to receiver’s requests
+    }, SetOptions(merge: true));
+  }
+
+  static Stream<DocumentSnapshot<Map<String, dynamic>>> getFriendRequests() {
+    final String userId = auth.currentUser!.uid; // Get current user ID
+    return firestore.collection('friend_requests').doc(userId).snapshots();
+  }
+
+  static Future<ChatUesr?> getUserById(String userId) async {
+    final doc = await firestore.collection('users').doc(userId).get();
+    if (doc.exists) {
+      return ChatUesr.fromJson(doc.data()!);
+    }
+    return null;
+  }
+
+  Future<void> acceptFriendRequest(String userId) async {
+    final currentUserId = auth.currentUser!.uid;
+    print(
+        "📌 Accepting friend request: $userId for current user: $currentUserId");
+
+    try {
+      // ✅ Use batch write to ensure atomic updates
+      WriteBatch batch = firestore.batch();
+
+      // Add each other as friends
+      batch.update(firestore.collection('users').doc(currentUserId), {
+        'friends': FieldValue.arrayUnion([userId])
+      });
+
+      batch.update(firestore.collection('users').doc(userId), {
+        'friends': FieldValue.arrayUnion([currentUserId])
+      });
+
+      // Remove from received requests
+      batch.update(firestore.collection('friend_requests').doc(currentUserId), {
+        'received_requests': FieldValue.arrayRemove([userId])
+      });
+
+      // Remove from sent requests
+      batch.update(firestore.collection('friend_requests').doc(userId), {
+        'sent_requests': FieldValue.arrayRemove([currentUserId])
+      });
+
+      // ✅ Commit batch updates
+      await batch.commit();
+      print("✅ Friend request accepted successfully!");
+    } catch (e) {
+      print("❌ Error accepting friend request: $e");
+    }
+  }
+
+  Future<void> rejectFriendRequest(String userId) async {
+    final currentUserId = auth.currentUser!.uid;
+
+    // Remove from received requests
+    await firestore.collection('friend_requests').doc(currentUserId).update({
+      'received_requests': FieldValue.arrayRemove([userId])
+    });
+
+    // Remove from sent requests
+    await firestore.collection('friend_requests').doc(userId).update({
+      'sent_requests': FieldValue.arrayRemove([currentUserId])
+    });
+  }
+
+  static Future<List<String>> getFriendsList() async {
+    final selfId = auth.currentUser!.uid;
+    final doc = await firestore.collection('users').doc(selfId).get();
+
+    if (doc.exists) {
+      List<dynamic> friends = doc.data()?['friends'] ?? [];
+      return friends.cast<String>(); // Convert to List<String>
+    }
+    return [];
+  }
+
+  static Future<List<String>> getPendingRequests() async {
+    final selfId = auth.currentUser!.uid;
+    final doc = await firestore.collection('friend_requests').doc(selfId).get();
+
+    if (doc.exists) {
+      List<dynamic> requests = doc.data()?['sent_requests'] ?? [];
+      return requests.cast<String>(); // Convert dynamic list to List<String>
+    }
+    return [];
+  }
+
+  static Stream<QuerySnapshot> getFriendsStream() {
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+    return FirebaseFirestore.instance
+        .collection('users')
+        .where('friends',
+            arrayContains:
+                currentUserId) // ✅ Fetch users where current user is in 'friends'
+        .snapshots();
+  }
+
+  static final FirebaseDatabase _database = FirebaseDatabase.instance;
+
+  static Stream<DatabaseEvent> getUserStatus(String userId) {
+    return FirebaseDatabase.instance.ref('users/$userId/status').onValue;
   }
 }

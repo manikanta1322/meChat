@@ -205,13 +205,13 @@ class _ChatScreenState extends State<ChatScreen> {
               const SizedBox(
                 height: 1,
               ),
-              const Text(
-                'Last seen not available',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black54,
-                ),
-              )
+              // const Text(
+              //   'Last seen not available',
+              //   style: TextStyle(
+              //     fontSize: 12,
+              //     color: Colors.black54,
+              //   ),
+              // )
             ],
           )
         ],

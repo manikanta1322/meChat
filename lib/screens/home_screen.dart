@@ -1,4 +1,3 @@
-
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/cupertino.dart';
@@ -7,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:we_chat/api/api.dart';
 import 'package:we_chat/main.dart';
 import 'package:we_chat/models/chatUser.dart';
+import 'package:we_chat/screens/auth/addNewFriendsScreen.dart';
 import 'package:we_chat/screens/auth/login_screen.dart';
 import 'package:we_chat/screens/auth/profileScreen.dart';
 import 'package:we_chat/widgets/chatUserCard.dart';
@@ -49,113 +49,100 @@ class _HomeScreenState extends State<HomeScreen> {
           //app bar
           appBar: AppBar(
             leading: const Icon(CupertinoIcons.home),
-            title: _isSearching
-                ? TextField(
-                    decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Name, Email, ..... '),
-                    autofocus: true,
-                    style: const TextStyle(fontSize: 17, letterSpacing: 0.5),
-                    onChanged: (val) {
-                      _searchList.clear();
-
-                      for (var i in _list) {
-                        if (i.name!.toLowerCase().contains(val.toLowerCase()) ||
-                            i.email!
-                                .toLowerCase()
-                                .contains(val.toLowerCase())) {
-                          _searchList.add(i);
+            title: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: _isSearching
+                  ? TextField(
+                      key: const ValueKey(1),
+                      decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Search by Name or Email'),
+                      autofocus: true,
+                      style: const TextStyle(fontSize: 17, letterSpacing: 0.5),
+                      onChanged: (val) {
+                        _searchList.clear();
+                        for (var i in _list) {
+                          if (i.name!
+                                  .toLowerCase()
+                                  .contains(val.toLowerCase()) ||
+                              i.email!
+                                  .toLowerCase()
+                                  .contains(val.toLowerCase())) {
+                            _searchList.add(i);
+                          }
                         }
-                        setState(() {
-                          _searchList;
-                        });
-                      }
-                    },
-                  )
-                : const Text('Me Chat'),
+                        setState(() {}); // Update UI
+                      },
+                    )
+                  : const Text('Me Chat'),
+            ),
             actions: [
-              //search user button
               IconButton(
-                  onPressed: () {
-                    setState(() {
-                      _isSearching = !_isSearching;
-                    });
-                  },
-                  icon: Icon(_isSearching
-                      ? CupertinoIcons.clear_circled_solid
-                      : Icons.search)),
-
-              //more features button
+                onPressed: () {
+                  setState(() => _isSearching = !_isSearching);
+                },
+                icon: Icon(_isSearching
+                    ? CupertinoIcons.clear_circled_solid
+                    : Icons.search),
+              ),
               IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => ProfileScreen(user: APIs.me)));
-                  },
-                  icon: const Icon(Icons.more_vert))
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ProfileScreen(user: APIs.me)));
+                },
+                icon: const Icon(Icons.more_vert),
+              ),
             ],
           ),
           //floating button to add new user
           floatingActionButton: Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 80 : 10),
             child: FloatingActionButton(
-                onPressed: () async {
-                  await APIs.auth.signOut();
-                  await GoogleSignIn().signOut();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) {
-                      return const LoginScreen();
-                    }),
-                  );
-                },
-                child: const Icon(Icons.add_comment_rounded)),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const AddNewFriendsScreen()),
+                );
+              },
+              child: const Icon(Icons.add_comment_rounded),
+            ),
           ),
           body: StreamBuilder(
-            stream: APIs.getAllUsers(),
+            stream: APIs
+                .getFriendsStream(), // ✅ Now correctly fetching updated friends list
             builder: (context, snapshot) {
               switch (snapshot.connectionState) {
-                // if data is loading
                 case ConnectionState.waiting:
                 case ConnectionState.none:
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-
-                // if some or all data is loaded then show it
+                  return const Center(child: CircularProgressIndicator());
 
                 case ConnectionState.active:
                 case ConnectionState.done:
-                  final data = snapshot.data?.docs;
-
-                  _list =
-                      data?.map((e) => ChatUesr.fromJson(e.data())).toList() ??
-                          [];
-
-                  if (_list.isNotEmpty) {
-                    return ListView.builder(
-                        // itemCount: 45,
-                        shrinkWrap: true,
-                        itemCount:
-                            _isSearching ? _searchList.length : _list.length,
-                        physics: const BouncingScrollPhysics(),
-                        padding: EdgeInsets.only(top: mv.height * .01),
-                        itemBuilder: (context, index) {
-                          return ChatUserCard(
-                            user: _isSearching
-                                ? _searchList[index]
-                                : _list[index],
-                          );
-                          // return Text('Name: ${list[index]}');
-                        });
-                  } else {
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return const Center(
-                        child: Text(
-                      "No Users Found",
-                      style: TextStyle(fontSize: 20),
-                    ));
+                      child: Text("No Friends Found",
+                          style: TextStyle(fontSize: 20)),
+                    );
                   }
+                  final data = snapshot.data!.docs;
+                  _list = data
+                      .map((e) =>
+                          ChatUesr.fromJson(e.data() as Map<String, dynamic>))
+                      .toList();
+                  return ListView.builder(
+                    itemCount: _isSearching ? _searchList.length : _list.length,
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.only(top: mv.height * .01),
+                    itemBuilder: (context, index) {
+                      return ChatUserCard(
+                        user: _isSearching ? _searchList[index] : _list[index],
+                      );
+                    },
+                  );
               }
             },
           ),

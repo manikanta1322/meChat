@@ -33,9 +33,9 @@ apply plugin: 'com.google.gms.google-services'
 // END: FlutterFire Configuration
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
+     
 android {
-    namespace 'com.mechat.app'
+    namespace "com.mechat.app"
     compileSdkVersion 35    
     ndkVersion flutter.ndkVersion
 
