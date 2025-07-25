@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "173784210273-b31qbkfjdlcjn7s16ambcfiip4k8a8p2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mechat.app",
+            "certificate_hash": "0fdb601d62522b9d8a5a53e045649518ca4cab4e"
+          }
+        },
+        {
           "client_id": "173784210273-cc87gf1uqvd4cpnov05ubqg6pluetvog.apps.googleusercontent.com",
           "client_type": 3
         }

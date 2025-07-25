@@ -1,11 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:we_chat/api/api.dart';
 import 'package:we_chat/screens/auth/login_screen.dart';
 import 'package:we_chat/screens/home_screen.dart';
-
-import '../../main.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,69 +12,143 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  // bool _isAnimate = false;
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _logoFadeAnimation;
+  late Animation<double> _logoScaleAnimation;
+  late Animation<Offset> _textSlideAnimation;
+  late Animation<double>
+  _textFadeAnimation; // <-- 1. DECLARED THE NEW ANIMATION
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    Future.delayed(
-      const Duration(milliseconds: 2000),
-      () {
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-        SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-            systemNavigationBarColor: Colors.white,
-            statusBarColor: Colors.white));
 
-        if (APIs.auth.currentUser != null) {
-          if (kDebugMode) {
-            print('\nUser : ${APIs.auth.currentUser}');
-          }
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) {
-              return const HomeScreen();
-            }),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) {
-              return const LoginScreen();
-            }),
-          );
-        }
-      },
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+      ),
+    );
+
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+
+    _logoFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+
+    _logoScaleAnimation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
+
+    // This animation controls the slide-up motion
+    _textSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+      ),
+    );
+
+    // <-- 2. DEFINED THE NEW FADE ANIMATION
+    // This animation controls the fade-in, using the same interval to sync with the slide
+    _textFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+      ),
+    );
+
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _navigateToNextScreen();
+      }
+    });
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
+  }
+
+  void _navigateToNextScreen() {
+    Widget targetScreen =
+        (APIs.auth.currentUser != null)
+            ? const HomeScreen()
+            : const LoginScreen();
+
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => targetScreen,
+        transitionDuration: const Duration(milliseconds: 1000),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    mv = MediaQuery.of(context).size;
+    final mq = MediaQuery.of(context).size;
+
     return Scaffold(
+      backgroundColor: const Color(0xFF0D0F20),
       body: Stack(
+        fit: StackFit.expand,
+        alignment: Alignment.center,
         children: [
-          Positioned(
-            top: mv.height * .15,
-            // right: _isAnimate ? mv.width * .25 : -mv.width * .5,
-            right: mv.width * .25,
-            width: mv.width * .5,
-            child: Image.asset('assets/images/logo.png'),
+          // This will now be centered and correctly sized.
+          FadeTransition(
+            opacity: _logoFadeAnimation,
+            child: ScaleTransition(
+              scale: _logoScaleAnimation,
+              child: Image.asset(
+                'assets/images/logo.png',
+                // THE FIX: Use width to control the size directly.
+                // A value around 45% of the screen width is a good starting point.
+                width: mq.width * .45, 
+                
+                // REMOVE THE 'scale' PROPERTY. It was causing the image to become huge.
+                // scale: 0.01, 
+              ),
+            ),
           ),
+
+          // This part remains correct.
           Positioned(
-              bottom: mv.height * .15,
-              left: mv.width * .05,
-              width: mv.width * .9,
-              height: mv.height * .07,
-              child: const Text(
-                'Manikanta Chemiti ❤️',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.black87,
-                  letterSpacing: 0.5,
-                  fontSize: 16,
+            bottom: mq.height * .08,
+            left: 0,
+            right: 0,
+            child: FadeTransition(
+              opacity: _textFadeAnimation,
+              child: SlideTransition(
+                position: _textSlideAnimation,
+                child: Text(
+                  'Manikanta Chemiti ❤️',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 16,
+                    letterSpacing: 0.5,
+                  ),
                 ),
-              ))
+              ),
+            ),
+          ),
         ],
       ),
     );

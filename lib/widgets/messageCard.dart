@@ -1,161 +1,120 @@
-// ignore_for_file: file_names
+// lib/widgets/messageCard.dart
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:we_chat/api/api.dart';
 import 'package:we_chat/helpers/myDateUtil.dart';
 import 'package:we_chat/models/messages.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 
-class MessageCard extends StatefulWidget {
+class MessageCard extends StatelessWidget {
   final Messages messages;
   const MessageCard({super.key, required this.messages});
 
   @override
-  State<MessageCard> createState() => _MessageCardState();
-}
-
-class _MessageCardState extends State<MessageCard> {
-  @override
   Widget build(BuildContext context) {
-    return APIs.user.uid == widget.messages.fromId
-        ? _greenMessage()
-        : _blueMessage();
+    bool isMe = APIs.user.uid == messages.fromId;
+    return isMe ? _greenMessage(context) : _blueMessage(context);
   }
 
-  // Function to show dialog when image is tapped
-  void _showImageOptions(String imageUrl) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Image Options'),
-        content: const Text('Do you want to download this image?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Download'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Sender's message
-  Widget _blueMessage() {
-    if (widget.messages.read.isEmpty) {
-      APIs.updateMessageReadStatus(widget.messages);
+  // Sender's message (the other user)
+  Widget _blueMessage(BuildContext context) {
+    // Update last read message if sender and receiver are different
+    if (messages.read.isEmpty) {
+      APIs.updateMessageReadStatus(messages);
     }
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Flexible(
           child: Container(
-            padding:
-                EdgeInsets.all(widget.messages.type == Type.image ? 12 : 16),
-            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.all(messages.type == Type.image ? 8 : 12),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 203, 225, 243),
-              border: Border.all(color: Colors.lightBlue),
+              color: Colors.white.withOpacity(0.1),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
-                bottomRight: Radius.circular(30),
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
               ),
             ),
-            child: widget.messages.type == Type.text
-                ? Text(
-                    widget.messages.msg,
-                    style: const TextStyle(fontSize: 15, color: Colors.black87),
-                  )
-                : GestureDetector(
-                    onTap: () => _showImageOptions(widget.messages.msg),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: CachedNetworkImage(
-                        imageUrl: widget.messages.msg,
-                        placeholder: (context, url) =>
-                            const CircularProgressIndicator(),
-                        errorWidget: (context, url, error) =>
-                            const Icon(Icons.broken_image, size: 50),
-                      ),
-                    ),
-                  ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: Text(
-            MyDateUtil.getformattedTime(
-                context: context, time: widget.messages.sent),
-            style: const TextStyle(fontSize: 13, color: Colors.black54),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildMessageContent(),
+                const SizedBox(height: 4),
+                Text(
+                  MyDateUtil.getformattedTime(context: context, time: messages.sent),
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.white54),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  // Receiver's message
-  Widget _greenMessage() {
+  // Our message (the current user)
+  Widget _greenMessage(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Row(
-          children: [
-            const SizedBox(width: 16),
-            if (widget.messages.read.isNotEmpty)
-              const Icon(Icons.done_all_rounded, color: Colors.blue, size: 20),
-            const SizedBox(width: 2),
-            Text(
-              MyDateUtil.getformattedTime(
-                  context: context, time: widget.messages.sent),
-              style: const TextStyle(fontSize: 13, color: Colors.black54),
-            ),
-          ],
-        ),
         Flexible(
           child: Container(
-            padding:
-                EdgeInsets.all(widget.messages.type == Type.image ? 12 : 16),
-            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.all(messages.type == Type.image ? 8 : 12),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 208, 243, 203),
-              border: Border.all(color: Colors.lightGreen),
+              color: const Color(0xFF00F5D4).withOpacity(0.2), // Accent color
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
-                bottomLeft: Radius.circular(30),
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+                bottomLeft: Radius.circular(20),
               ),
             ),
-            child: widget.messages.type == Type.text
-                ? Text(
-                    widget.messages.msg,
-                    style: const TextStyle(fontSize: 15, color: Colors.black87),
-                  )
-                : GestureDetector(
-                    onTap: () => _showImageOptions(widget.messages.msg),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: CachedNetworkImage(
-                        imageUrl: widget.messages.msg,
-                        placeholder: (context, url) =>
-                            const CircularProgressIndicator(),
-                        errorWidget: (context, url, error) =>
-                            const Icon(Icons.broken_image, size: 50),
-                      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildMessageContent(),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      MyDateUtil.getformattedTime(context: context, time: messages.sent),
+                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.white54),
                     ),
-                  ),
+                    const SizedBox(width: 5),
+                    if (messages.read.isNotEmpty)
+                      const Icon(Icons.done_all_rounded, color: Colors.cyanAccent, size: 16),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildMessageContent() {
+    return messages.type == Type.text
+        ? Text(
+            messages.msg,
+            style: GoogleFonts.poppins(fontSize: 15, color: Colors.white),
+          )
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: CachedNetworkImage(
+              imageUrl: messages.msg,
+              placeholder: (context, url) => const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              ),
+              errorWidget: (context, url, error) => const Icon(Icons.image, size: 70),
+            ),
+          );
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:we_chat/screens/auth/splash_screen.dart';
-import 'firebase_options.dart';
+import 'firebase_options.dart'; 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -13,7 +13,7 @@ late Size mv;
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Enter full screen
@@ -21,37 +21,46 @@ void main() {
 
   // Set orientation to portrait only
   SystemChrome.setPreferredOrientations(
-          [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown])
-      .then((value) {
-    _initializeFirebase();
-    _initializeNotifications(); // Initialize notifications
-    runApp(const MyApp());
-  });
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+
+  // Initialize Firebase and Notifications
+  await _initializeFirebase();
+  await _initializeNotifications();
+
+  runApp(const MyApp());
 }
 
 // Initialize Firebase
 Future<void> _initializeFirebase() async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+  } catch (e) {
+    debugPrint("Firebase initialization error: $e");
+  }
 }
 
 // Initialize Notifications
 Future<void> _initializeNotifications() async {
-  const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('assets/images/logo.png');
+  try {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('ic_launcher'); // Use default launcher icon
 
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
 
-  const InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
-
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  } catch (e) {
+    debugPrint("Notification initialization error: $e");
+  }
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -74,5 +83,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-

@@ -1,48 +1,56 @@
+// in models/chatUser.dart
+
 class ChatUesr {
-  String? image;
-  String? about;
-  String? name;
-  String? createdAt;
-  String? lastActive;
-  bool? isOnline;
-  String? id;
-  String? email;
-  String? pushToken;
+  ChatUesr({
+    required this.image,
+    required this.about,
+    required this.name,
+    required this.createdAt,
+    required this.isOnline,
+    required this.id,
+    required this.lastActive,
+    required this.email,
+    required this.pushToken,
+    required this.phone, // <-- ADD THIS TO CONSTRUCTOR
+  });
+  late String image;
+  late String about;
+  late String name;
+  late String createdAt;
+  late bool isOnline;
+  late String id;
+  late String lastActive;
+  late String email;
+  late String pushToken;
+  late String phone; // <-- The field itself
 
-  ChatUesr(
-      {this.image,
-      this.about,
-      this.name,
-      this.createdAt,
-      this.lastActive,
-      this.isOnline,
-      this.id,
-      this.email,
-      this.pushToken});
-
+  // Factory constructor for creating a new ChatUesr instance from a map
   ChatUesr.fromJson(Map<String, dynamic> json) {
-    image = json['image'] ?? "";
-    about = json['about'] ?? "";
-    name = json['name'] ?? "";
-    createdAt = json['created_at'] ?? "";
-    lastActive = json['last_active'] ?? "";
-    isOnline = json['is_online'];
-    id = json['id'] ?? "";
-    email = json['email'] ?? "";
-    pushToken = json['push_token'] ?? "";
+    image = json['image'] ?? '';
+    about = json['about'] ?? '';
+    name = json['name'] ?? '';
+    createdAt = json['created_at'] ?? '';
+    isOnline = json['is_online'] ?? false;
+    id = json['id'] ?? '';
+    lastActive = json['last_active'] ?? '';
+    email = json['email'] ?? '';
+    pushToken = json['push_token'] ?? '';
+    phone = json['phone'] ?? ''; // <-- ADD THIS TO fromJson
   }
 
+  // Method to convert a ChatUesr instance to a map
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['image'] = this.image;
-    data['about'] = this.about;
-    data['name'] = this.name;
-    data['created_at'] = this.createdAt;
-    data['last_active'] = this.lastActive;
-    data['is_online'] = this.isOnline;
-    data['id'] = this.id;
-    data['email'] = this.email;
-    data['push_token'] = this.pushToken;
+    final data = <String, dynamic>{};
+    data['image'] = image;
+    data['about'] = about;
+    data['name'] = name;
+    data['created_at'] = createdAt;
+    data['is_online'] = isOnline;
+    data['id'] = id;
+    data['last_active'] = lastActive;
+    data['email'] = email;
+    data['push_token'] = pushToken;
+    data['phone'] = phone; // <-- ADD THIS TO toJson
     return data;
   }
 }
